@@ -27,3 +27,7 @@ mkdir -p ~/Applications
 rm -rf ~/Applications/FocusDim.app
 cp -R "$APP" ~/Applications/
 echo "Installed ~/Applications/FocusDim.app"
+
+# A new build has a new signature, so macOS forgets the old Accessibility
+# permission. Clear the stale entry so FocusDim asks again cleanly.
+tccutil reset Accessibility com.nropke.focusdim >/dev/null 2>&1 || true
