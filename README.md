@@ -4,6 +4,8 @@ A tiny, free macOS menu bar app that dims every window except the one you are wo
 
 Inspired by [HazeOver](https://hazeover.com/).
 
+![FocusDim: only the focused window stays bright across a MacBook and two monitors](docs/screenshot.png)
+
 ## Features
 
 - Dims every window except the focused one, on every connected display
