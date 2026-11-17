@@ -87,12 +87,15 @@ final class App: NSObject, NSApplicationDelegate {
         return CGRect(x: f.minX, y: mainH - f.maxY, width: f.width, height: f.height)
     }
 
-    /// Top normal window of the frontmost app (front-to-back order).
-    private func frontWindow() -> (id: CGWindowID, rect: CGRect)? {
+    /// Top normal window of the frontmost app (front-to-back order),
+    /// plus the frames of all that app's visible windows.
+    private func frontWindow() -> (id: CGWindowID, rects: [CGRect])? {
         guard let app = NSWorkspace.shared.frontmostApplication else { return nil }
         let pid = app.processIdentifier
         guard let list = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements],
                                                     kCGNullWindowID) as? [[String: Any]] else { return nil }
+        var topID: CGWindowID?
+        var rects: [CGRect] = []
         for w in list {
             guard (w[kCGWindowOwnerPID as String] as? pid_t) == pid,
                   (w[kCGWindowLayer as String] as? Int) == 0,
@@ -101,9 +104,21 @@ final class App: NSObject, NSApplicationDelegate {
             guard let b = w[kCGWindowBounds as String] as? NSDictionary,
                   let r = CGRect(dictionaryRepresentation: b),
                   r.width >= 80, r.height >= 80 else { continue }
-            return (id, r)
+            if topID == nil { topID = id }
+            rects.append(r)
         }
-        return nil
+        guard let id = topID else { return nil }
+        return (id, rects)
+    }
+
+    /// True if one of the app's windows fills the whole screen.
+    /// Full-screen windows on a notched MacBook start below the notch,
+    /// and full-screen apps can put the toolbar in a separate window, so check every window.
+    private func isFullScreen(_ rects: [CGRect], on screen: CGRect, notch: CGFloat) -> Bool {
+        rects.contains { r in
+            r.minX <= screen.minX + 2 && r.maxX >= screen.maxX - 2 &&
+            r.minY <= screen.minY + notch + 2 && r.maxY >= screen.maxY - 2
+        }
     }
 
     private func tick() {
@@ -118,11 +133,10 @@ final class App: NSObject, NSApplicationDelegate {
             for o in overlays { o.order(.below, relativeTo: Int(front.id)) }
             lastWID = front.id
         }
-        // A full-screen focused window covers its whole screen: no dimming there.
+        // A full-screen focused app fills its screen: no dimming there.
         fade(overlays.map { o in
-            let s = cgFrame(of: o)
-            let full = front.rect.insetBy(dx: -2, dy: -2).contains(s)
-            return full ? 0 : dim
+            isFullScreen(front.rects, on: cgFrame(of: o),
+                         notch: o.screen?.safeAreaInsets.top ?? 0) ? 0 : dim
         })
     }
 
