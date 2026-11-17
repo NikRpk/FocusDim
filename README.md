@@ -16,7 +16,20 @@ Inspired by [HazeOver](https://hazeover.com/).
 - Starts automatically at login (can be turned off in the menu)
 - Single Swift file, no dependencies
 
-## Requirements
+## Easy install (no Terminal needed)
+
+1. Download **[FocusDim.dmg](https://github.com/NikRpk/FocusDim/releases/latest/download/FocusDim.dmg)**.
+2. Open the downloaded file. Drag **FocusDim** onto the **Applications** folder.
+3. Open your **Applications** folder and double-click **FocusDim**.
+4. macOS will say it can't check the app, because FocusDim is free and not registered with Apple. Click **Done** (not "Move to Trash").
+5. Open **System Settings → Privacy & Security**. Scroll down and click **Open Anyway** next to FocusDim. Confirm with your password or Touch ID.
+6. macOS asks for **Accessibility** access. Click **Open System Settings** and turn on **FocusDim**.
+
+Done. A half-filled circle appears in the menu bar. Press **⌘⇧D** (Command + Shift + D) to turn dimming on or off. FocusDim starts by itself every time you start your Mac.
+
+Steps 4 and 5 are only needed the first time.
+
+## Build from source
 
 - macOS 13 (Ventura) or later
 - Xcode Command Line Tools (for `swiftc`): `xcode-select --install`
@@ -62,8 +75,19 @@ Each build has a new local signature, so macOS forgets the Accessibility permiss
 ## Uninstall
 
 1. Menu bar icon → untick **Start at login**, then **Quit FocusDim**
-2. Delete `~/Applications/FocusDim.app`
+2. Delete **FocusDim** from your Applications folder (or `~/Applications/FocusDim.app` if you built it yourself)
 3. Optional: remove FocusDim from System Settings → Privacy & Security → Accessibility
+
+## Make the installer
+
+`./release.sh` builds `dist/FocusDim.dmg`: a universal app (Apple silicon and Intel, macOS 13+) on a disk image with an Applications shortcut. Upload it to a GitHub release:
+
+```sh
+./release.sh
+gh release create v1.0 dist/FocusDim.dmg --title "FocusDim 1.0"
+```
+
+The app is signed locally, not with a paid Apple Developer ID, which is why first-time users need **Open Anyway** (step 5 of Easy install).
 
 ## How it works
 
