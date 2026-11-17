@@ -111,14 +111,17 @@ final class App: NSObject, NSApplicationDelegate {
         return (id, rects)
     }
 
-    /// True if one of the app's windows fills the whole screen.
-    /// Full-screen windows on a notched MacBook start below the notch,
-    /// and full-screen apps can put the toolbar in a separate window, so check every window.
+    /// True if the app's windows fill the whole screen.
+    /// Full-screen windows on a notched MacBook start below the notch, and some
+    /// full-screen apps (Chrome) split into several full-width strips, so join them.
     private func isFullScreen(_ rects: [CGRect], on screen: CGRect, notch: CGFloat) -> Bool {
-        rects.contains { r in
-            r.minX <= screen.minX + 2 && r.maxX >= screen.maxX - 2 &&
-            r.minY <= screen.minY + notch + 2 && r.maxY >= screen.maxY - 2
+        let strips = rects.filter {
+            $0.minX <= screen.minX + 2 && $0.maxX >= screen.maxX - 2 &&
+            $0.maxY > screen.minY && $0.minY < screen.maxY
         }
+        guard let first = strips.first else { return false }
+        let u = strips.dropFirst().reduce(first) { $0.union($1) }
+        return u.minY <= screen.minY + notch + 2 && u.maxY >= screen.maxY - 2
     }
 
     private func tick() {
